@@ -1,2 +1,2 @@
-# MicroInSitu
-Code repository for python code used to operate the world's smallest in-situ 3He neutron polarizer/analyzer
+# Lakeshore625
+Control software for Lakeshore 625 superconducting magnet power supplies for use on high Tc SNP device at ORNL.
