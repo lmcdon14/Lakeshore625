@@ -4,7 +4,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from td_gui import Ui_TapeDriveWindow
-import pyvisa
+import visa
 import math
 import matplotlib.pyplot as plt
 import array
@@ -15,7 +15,6 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		super().__init__()
 		self.setupUi(self)
 		self.sim = simulate
-		self.i=0
 
 		exitAction = QtWidgets.QAction(QtGui.QIcon('pics/exit.png'), '&Exit', self)
 		exitAction.setShortcut('Ctrl+Q')
@@ -27,13 +26,24 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		fileMenu.addAction(exitAction)
 
 		if simulate==False:			
-			# Attempt to onnect to Lakeshore 625
-			pass
+			# Attempt to connect to Lakeshore 625
+			self.type = 'gpib'
+			self.con.toggled.connect(self.connection)
 		
 		self.timer = QtCore.QTimer()
 		self.timer.setInterval(3000)
 		self.timer.timeout.connect(self.recurring_timer)
 		self.timer.start()
+
+	def connection(self):
+		if self.type == 'gpib':
+			self.rm = visa.ResourceManager()
+			self.resources = self.rm.list_resources()
+			i=0
+			for re in self.resources:
+				if re[0:3] = 'GPIB':
+					self.instruments[i] = self.rm.open_resource(re)
+					print(self.instruments[i].query('*IDN?"'))
 
 	def recurring_timer(self):
 		if self.sim==False:
