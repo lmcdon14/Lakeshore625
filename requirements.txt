@@ -1,0 +1,4 @@
+python_ivi==0.14.9
+ivi==1.0.0
+PyQt5==5.15.0
+pyserial==3.4
