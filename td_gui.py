@@ -79,8 +79,8 @@ class Ui_TapeDriveWindow(object):
     def setupUi(self, TapeDriveWindow):
         # Setup window
         TapeDriveWindow.setObjectName("TapeDriveWindow")
-        TapeDriveWindow.resize(640, 700)
-        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 725))
+        TapeDriveWindow.resize(640, 775)
+        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 775))
         TapeDriveWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         TapeDriveWindow.setStyleSheet("TapeDriveWindow {qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 0, 255), stop:1 rgba(255, 255, 255, 255))}")
         self.centralwidget = QtWidgets.QWidget(TapeDriveWindow)
@@ -88,6 +88,7 @@ class Ui_TapeDriveWindow(object):
 
         # Setup plots for neutron counts vs. current
         sc = MplCanvas(self, width=5, height=4, dpi=100)
+        # Arbitrary plot values
         sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
         toolbar = NavigationToolbar(sc, self)
         layout = QtWidgets.QVBoxLayout()
@@ -95,7 +96,7 @@ class Ui_TapeDriveWindow(object):
         layout.addWidget(sc)
         widget = QtWidgets.QWidget(self.centralwidget)
         widget.setLayout(layout)
-        widget.setGeometry(QtCore.QRect(70, 175, 500, 500))
+        widget.setGeometry(QtCore.QRect(70, 235, 500, 500))
         self.centralwidget.show()
 
         icon = QtGui.QIcon()
@@ -108,6 +109,7 @@ class Ui_TapeDriveWindow(object):
         font.setPointSize(14)
         font.setBold(True)
         font.setWeight(75)
+        xmov = 50
 
         # PS Label
         self.label_5 = QtWidgets.QLabel(self.centralwidget)
@@ -117,45 +119,87 @@ class Ui_TapeDriveWindow(object):
         self.label_5.setObjectName("label_5")
         # Main Field Setpoint Label
         self.label_ms = QtWidgets.QLabel(self.centralwidget)
-        self.label_ms.setGeometry(QtCore.QRect(110+35, 85, 100, 40))
+        self.label_ms.setGeometry(QtCore.QRect(110+35+xmov, 85, 100, 40))
         self.label_ms.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
         self.label_ms.setAlignment(QtCore.Qt.AlignCenter)
         self.label_ms.setObjectName("label_ms")
         # Main Field Setpoint Label
         self.label_mr = QtWidgets.QLabel(self.centralwidget)
-        self.label_mr.setGeometry(QtCore.QRect(210+35, 85, 100, 40))
+        self.label_mr.setGeometry(QtCore.QRect(210+35+xmov, 85, 100, 40))
         self.label_mr.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
         self.label_mr.setAlignment(QtCore.Qt.AlignCenter)
         self.label_mr.setObjectName("label_mr")
+        # PS1 Label
+        self.label_ps1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_ps1.setGeometry(QtCore.QRect(50+xmov, 130, 100, 40))
+        self.label_ps1.setStyleSheet("QLabel {font-size: 20px; color: black; border-radius: 5px;}")
+        self.label_ps1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_ps1.setObjectName("label_ps1")
+        # PS2 Label
+        self.label_ps2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_ps2.setGeometry(QtCore.QRect(50+xmov, 180, 100, 40))
+        self.label_ps2.setStyleSheet("QLabel {font-size: 20px; color: black; border-radius: 5px;}")
+        self.label_ps2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_ps2.setObjectName("label_ps2")
         
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ps1spinBox.setGeometry(QtCore.QRect(110+35, 130, 100, 40))
+        self.ps1spinBox.setGeometry(QtCore.QRect(110+35+xmov, 130, 100, 40))
         self.ps1spinBox.setFont(font)
+        self.ps1spinBox.setReadOnly(True)
         self.ps1spinBox.setDecimals(3)
         self.ps1spinBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.ps1spinBox.setStyleSheet("color: lightgrey;")
         self.ps1spinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
         self.ps1spinBox.setKeyboardTracking(False)
-        self.ps1spinBox.setMinimum(0.0)
+        self.ps1spinBox.setMinimum(-20.0)
         self.ps1spinBox.setMaximum(20.0)
         self.ps1spinBox.setProperty("value", 0.0)
         self.ps1spinBox.setObjectName("ps1spinBox")
         # Power Supply Readout 1
         self.ps1readspinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ps1readspinBox.setGeometry(QtCore.QRect(210+35, 130, 100, 40))
+        self.ps1readspinBox.setGeometry(QtCore.QRect(210+35+xmov, 130, 100, 40))
         self.ps1readspinBox.setFont(font)
         self.ps1readspinBox.setReadOnly(True)
         self.ps1readspinBox.setDecimals(3)
         self.ps1readspinBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.ps1readspinBox.setStyleSheet("color: lightgrey;")
         self.ps1readspinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
-        self.ps1readspinBox.setMinimum(0.0)
+        self.ps1readspinBox.setMinimum(-20.0)
         self.ps1readspinBox.setMaximum(20.0)
         self.ps1readspinBox.setProperty("value", 0.0)
         self.ps1readspinBox.setObjectName("ps1readspinBox")
+        # Power Supply Control 2
+        self.ps2spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.ps2spinBox.setGeometry(QtCore.QRect(110+35+xmov, 180, 100, 40))
+        self.ps2spinBox.setFont(font)
+        self.ps2spinBox.setReadOnly(True)
+        self.ps2spinBox.setDecimals(3)
+        self.ps2spinBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.ps2spinBox.setStyleSheet("color: lightgrey;")
+        self.ps2spinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
+        self.ps2spinBox.setKeyboardTracking(False)
+        self.ps2spinBox.setMinimum(-20.0)
+        self.ps2spinBox.setMaximum(20.0)
+        self.ps2spinBox.setProperty("value", 0.0)
+        self.ps2spinBox.setObjectName("ps1spinBox")
+        # Power Supply Readout 2
+        self.ps2readspinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.ps2readspinBox.setGeometry(QtCore.QRect(210+35+xmov, 180, 100, 40))
+        self.ps2readspinBox.setFont(font)
+        self.ps2readspinBox.setReadOnly(True)
+        self.ps2readspinBox.setDecimals(3)
+        self.ps2readspinBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.ps2readspinBox.setStyleSheet("color: lightgrey;")
+        self.ps2readspinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.ps2readspinBox.setMinimum(-20.0)
+        self.ps2readspinBox.setMaximum(20.0)
+        self.ps2readspinBox.setProperty("value", 0.0)
+        self.ps2readspinBox.setObjectName("ps2readspinBox")
 
         # PS1 Output Enable
         self.ps1Out = QtWidgets.QPushButton(self.centralwidget)
-        self.ps1Out.setGeometry(QtCore.QRect(320+35, 130, 140, 40))
+        self.ps1Out.setGeometry(QtCore.QRect(320+35+xmov, 130, 140, 40))
         self.ps1Out.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
         font2 = font
         font2.setPointSize(11)
@@ -164,26 +208,44 @@ class Ui_TapeDriveWindow(object):
         self.ps1Out.setCheckable(True)
         self.ps1Out.setText("Output Enable")
         self.ps1Out.setObjectName("ps1Out")
+        # PS2 Output Enable
+        self.ps2Out = QtWidgets.QPushButton(self.centralwidget)
+        self.ps2Out.setGeometry(QtCore.QRect(320+35+xmov, 180, 140, 40))
+        self.ps2Out.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.ps2Out.setFont(font2)
+        self.ps2Out.setCheckable(True)
+        self.ps2Out.setText("Output Enable")
+        self.ps2Out.setObjectName("ps2Out")
 
         # PS Connection
         self.con = QtWidgets.QPushButton(self.centralwidget)
-        self.con.setGeometry(QtCore.QRect(35, 100, 90, 65))
+        self.con.setGeometry(QtCore.QRect(10, 175-28, 80, 55))
         self.con.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
-        self.con.setFont(font2)
+        font3 = font
+        font3.setPointSize(9)
+        font3.setBold(False)
+        self.con.setFont(font3)
         self.con.setCheckable(True)
         self.con.setText("Connect\nDevices")
         self.con.setObjectName("con")
 
-        """
-        # PS2 Connect
-        self.con2 = QtWidgets.QPushButton(self.centralwidget)
-        self.con2.setGeometry(QtCore.QRect(320+35, 130, 140, 40))
-        self.con2.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
-        self.con2.setFont(font2)
-        self.con2.setCheckable(True)
-        self.con2.setText("Connect Device")
-        self.con2.setObjectName("con2")
-        """
+        # Neutron Count Data File
+        self.countfile = QtWidgets.QPushButton(self.centralwidget)
+        self.countfile.setGeometry(QtCore.QRect(10, 300, 50, 50))
+        self.countfile.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.countfile.setFont(font3)
+        self.countfile.setCheckable(False)
+        self.countfile.setText("Load\nData")
+        self.countfile.setObjectName("countfile")
+
+        # Neutron Count Data File
+        self.fitdata = QtWidgets.QPushButton(self.centralwidget)
+        self.fitdata.setGeometry(QtCore.QRect(10, 355, 50, 50))
+        self.fitdata.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.fitdata.setFont(font3)
+        self.fitdata.setCheckable(False)
+        self.fitdata.setText("Fit\nData")
+        self.fitdata.setObjectName("fitdata")
 
         TapeDriveWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(TapeDriveWindow)
@@ -208,6 +270,8 @@ class Ui_TapeDriveWindow(object):
         self.label_5.setText(_translate("TapeDriveWindow", "Lakeshore 625"))
         self.label_ms.setText(_translate("TapeDriveWindow", "Current\nSetpoint (A)"))
         self.label_mr.setText(_translate("TapeDriveWindow", "Current\nReadout (A)"))
+        self.label_ps1.setText(_translate("TapeDriveWindow", "Supply 1"))
+        self.label_ps2.setText(_translate("TapeDriveWindow", "Supply 2"))
         self.actionQuit.setText(_translate("TapeDriveWindow", "Exit"))
         self.actionQuit.setShortcut(_translate("TapeDriveWindow", "Meta+Q"))
         self.actionNothingHere.setText(_translate("TapeDriveWindow", "NothingHere"))
