@@ -7,8 +7,20 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import matplotlib
+matplotlib.use('Qt5Agg')
 import sys
 import re
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        fig.text(0.5, 0.02, 'Current (A)', ha='center')
+        fig.text(0.02, 0.5, 'Neutron Counts', va='center', rotation='vertical')
+        super(MplCanvas, self).__init__(fig)
         
 class MyButton(QtWidgets.QPushButton):
     def __init__(self, widget, font2, dims, text):
@@ -67,12 +79,25 @@ class Ui_TapeDriveWindow(object):
     def setupUi(self, TapeDriveWindow):
         # Setup window
         TapeDriveWindow.setObjectName("TapeDriveWindow")
-        TapeDriveWindow.resize(640, 400)
-        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 400))
+        TapeDriveWindow.resize(640, 700)
+        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 725))
         TapeDriveWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         TapeDriveWindow.setStyleSheet("TapeDriveWindow {qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 0, 255), stop:1 rgba(255, 255, 255, 255))}")
         self.centralwidget = QtWidgets.QWidget(TapeDriveWindow)
         self.centralwidget.setObjectName("centralwidget")
+
+        # Setup plots for neutron counts vs. current
+        sc = MplCanvas(self, width=5, height=4, dpi=100)
+        sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        toolbar = NavigationToolbar(sc, self)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(toolbar)
+        layout.addWidget(sc)
+        widget = QtWidgets.QWidget(self.centralwidget)
+        widget.setLayout(layout)
+        widget.setGeometry(QtCore.QRect(70, 175, 500, 500))
+        self.centralwidget.show()
+
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("Resources/bw3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         icon1 = QtGui.QIcon()
@@ -92,14 +117,20 @@ class Ui_TapeDriveWindow(object):
         self.label_5.setObjectName("label_5")
         # Main Field Setpoint Label
         self.label_ms = QtWidgets.QLabel(self.centralwidget)
-        self.label_ms.setGeometry(QtCore.QRect(5, 125, 100, 41))
+        self.label_ms.setGeometry(QtCore.QRect(110+35, 85, 100, 40))
         self.label_ms.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
         self.label_ms.setAlignment(QtCore.Qt.AlignCenter)
         self.label_ms.setObjectName("label_ms")
+        # Main Field Setpoint Label
+        self.label_mr = QtWidgets.QLabel(self.centralwidget)
+        self.label_mr.setGeometry(QtCore.QRect(210+35, 85, 100, 40))
+        self.label_mr.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_mr.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_mr.setObjectName("label_mr")
         
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ps1spinBox.setGeometry(QtCore.QRect(110, 130, 100, 40))
+        self.ps1spinBox.setGeometry(QtCore.QRect(110+35, 130, 100, 40))
         self.ps1spinBox.setFont(font)
         self.ps1spinBox.setDecimals(3)
         self.ps1spinBox.setAlignment(QtCore.Qt.AlignHCenter)
@@ -111,7 +142,7 @@ class Ui_TapeDriveWindow(object):
         self.ps1spinBox.setObjectName("ps1spinBox")
         # Power Supply Readout 1
         self.ps1readspinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ps1readspinBox.setGeometry(QtCore.QRect(210, 130, 100, 40))
+        self.ps1readspinBox.setGeometry(QtCore.QRect(210+35, 130, 100, 40))
         self.ps1readspinBox.setFont(font)
         self.ps1readspinBox.setReadOnly(True)
         self.ps1readspinBox.setDecimals(3)
@@ -124,7 +155,7 @@ class Ui_TapeDriveWindow(object):
 
         # PS1 Output Enable
         self.ps1Out = QtWidgets.QPushButton(self.centralwidget)
-        self.ps1Out.setGeometry(QtCore.QRect(320, 130, 140, 40))
+        self.ps1Out.setGeometry(QtCore.QRect(320+35, 130, 140, 40))
         self.ps1Out.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
         font2 = font
         font2.setPointSize(11)
@@ -133,6 +164,26 @@ class Ui_TapeDriveWindow(object):
         self.ps1Out.setCheckable(True)
         self.ps1Out.setText("Output Enable")
         self.ps1Out.setObjectName("ps1Out")
+
+        # PS Connection
+        self.con = QtWidgets.QPushButton(self.centralwidget)
+        self.con.setGeometry(QtCore.QRect(35, 100, 90, 65))
+        self.con.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.con.setFont(font2)
+        self.con.setCheckable(True)
+        self.con.setText("Connect\nDevices")
+        self.con.setObjectName("con")
+
+        """
+        # PS2 Connect
+        self.con2 = QtWidgets.QPushButton(self.centralwidget)
+        self.con2.setGeometry(QtCore.QRect(320+35, 130, 140, 40))
+        self.con2.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.con2.setFont(font2)
+        self.con2.setCheckable(True)
+        self.con2.setText("Connect Device")
+        self.con2.setObjectName("con2")
+        """
 
         TapeDriveWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(TapeDriveWindow)
@@ -156,6 +207,7 @@ class Ui_TapeDriveWindow(object):
         TapeDriveWindow.setWindowTitle(_translate("TapeDriveWindow", "Lakeshore 625 Control"))
         self.label_5.setText(_translate("TapeDriveWindow", "Lakeshore 625"))
         self.label_ms.setText(_translate("TapeDriveWindow", "Current\nSetpoint (A)"))
+        self.label_mr.setText(_translate("TapeDriveWindow", "Current\nReadout (A)"))
         self.actionQuit.setText(_translate("TapeDriveWindow", "Exit"))
         self.actionQuit.setShortcut(_translate("TapeDriveWindow", "Meta+Q"))
         self.actionNothingHere.setText(_translate("TapeDriveWindow", "NothingHere"))
