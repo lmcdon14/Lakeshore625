@@ -8,6 +8,7 @@ import math
 import matplotlib.pyplot as plt
 import array
 import numpy as np
+import re
 
 class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 	def __init__(self, simulate=False):
@@ -87,8 +88,11 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 	def get_count_file(self):
 		filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,'Open Neutron Count Data', QtCore.QDir.rootPath(), 'Text files (*.txt);;XML files (*.xml)')
 		
-		a_file = open(filename, "r")
-		list_of_lines = a_file.readlines()
+		current, counts = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
+		self.sc.axes.cla()  # Clear the canvas.
+		self.sc.axes.plot(current, counts)
+		self.sc.draw()
+		self.centralwidget.show()
 
 	def on_ps1_box(self):
 		val = self.ps1spinBox.value()

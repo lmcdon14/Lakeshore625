@@ -87,13 +87,13 @@ class Ui_TapeDriveWindow(object):
         self.centralwidget.setObjectName("centralwidget")
 
         # Setup plots for neutron counts vs. current
-        sc = MplCanvas(self, width=5, height=4, dpi=100)
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
         # Arbitrary plot values
-        sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
-        toolbar = NavigationToolbar(sc, self)
+        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        toolbar = NavigationToolbar(self.sc, self)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(toolbar)
-        layout.addWidget(sc)
+        layout.addWidget(self.sc)
         widget = QtWidgets.QWidget(self.centralwidget)
         widget.setLayout(layout)
         widget.setGeometry(QtCore.QRect(70, 235, 500, 500))
