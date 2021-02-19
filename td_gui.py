@@ -14,14 +14,6 @@ import re
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        fig.text(0.5, 0.02, 'Current (A)', ha='center')
-        fig.text(0.02, 0.5, 'Neutron Counts', va='center', rotation='vertical')
-        super(MplCanvas, self).__init__(fig)
-        
 class MyButton(QtWidgets.QPushButton):
     def __init__(self, widget, font2, dims, text):
         super().__init__(widget)
@@ -31,7 +23,7 @@ class MyButton(QtWidgets.QPushButton):
         self.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:5px;}")
         self.setFont(font3)
         self.setText(text)
-        self.setObjectName("lasOut")
+        self.setObjectName("fitdata")
         self.co_get = 0
         self.co_set = 0
 
@@ -74,29 +66,49 @@ class MyButton(QtWidgets.QPushButton):
 
     color = QtCore.pyqtProperty(QtGui.QColor, fset=_set_color)
 
+class MplCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(6, 1, (1, 5), xlabel='Current(A)', ylabel='Neutron Counts')
+        #fig.text(0.5, 0.02, 'Current (A)', ha='center')
+        #fig.text(0.02, 0.5, 'Neutron Counts', va='center', rotation='vertical')
+        super(MplCanvas, self).__init__(fig)
 
 class Ui_TapeDriveWindow(object):
     def setupUi(self, TapeDriveWindow):
         # Setup window
         TapeDriveWindow.setObjectName("TapeDriveWindow")
-        TapeDriveWindow.resize(640, 775)
-        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 775))
+        TapeDriveWindow.resize(640, 950)
+        TapeDriveWindow.setMinimumSize(QtCore.QSize(640, 950))
         TapeDriveWindow.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         TapeDriveWindow.setStyleSheet("TapeDriveWindow {qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 0, 255), stop:1 rgba(255, 255, 255, 255))}")
         self.centralwidget = QtWidgets.QWidget(TapeDriveWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         # Setup plots for neutron counts vs. current
-        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        self.sc0 = MplCanvas(self, width=5, height=4, dpi=100)
         # Arbitrary plot values
-        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
-        toolbar = NavigationToolbar(self.sc, self)
+        self.sc0.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        toolbar = NavigationToolbar(self.sc0, self)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(toolbar)
-        layout.addWidget(self.sc)
+        layout.addWidget(self.sc0)
         widget = QtWidgets.QWidget(self.centralwidget)
         widget.setLayout(layout)
-        widget.setGeometry(QtCore.QRect(70, 235, 500, 500))
+        widget.setGeometry(QtCore.QRect(70, 215, 500, 350))
+        self.centralwidget.show()
+
+        # Setup plots for neutron counts vs. current
+        self.sc1 = MplCanvas(self, width=5, height=1, dpi=100)
+        # Arbitrary plot values
+        self.sc1.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+        toolbar = NavigationToolbar(self.sc1, self)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(toolbar)
+        layout.addWidget(self.sc1)
+        widget = QtWidgets.QWidget(self.centralwidget)
+        widget.setLayout(layout)
+        widget.setGeometry(QtCore.QRect(70, 545, 500, 350))
         self.centralwidget.show()
 
         icon = QtGui.QIcon()
@@ -231,21 +243,43 @@ class Ui_TapeDriveWindow(object):
 
         # Neutron Count Data File
         self.countfile = QtWidgets.QPushButton(self.centralwidget)
-        self.countfile.setGeometry(QtCore.QRect(10, 300, 50, 50))
+        self.countfile.setGeometry(QtCore.QRect(10, 280, 50, 50))
         self.countfile.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
         self.countfile.setFont(font3)
         self.countfile.setCheckable(False)
         self.countfile.setText("Load\nData")
         self.countfile.setObjectName("countfile")
 
-        # Neutron Count Data File
-        self.fitdata = QtWidgets.QPushButton(self.centralwidget)
-        self.fitdata.setGeometry(QtCore.QRect(10, 355, 50, 50))
-        self.fitdata.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
-        self.fitdata.setFont(font3)
-        self.fitdata.setCheckable(False)
-        self.fitdata.setText("Fit\nData")
-        self.fitdata.setObjectName("fitdata")
+        # Fit Neutron Count Data
+        self.fitdata = MyButton(self.centralwidget, font2, QtCore.QRect(10, 335, 50, 50),"Fit\nData")
+        self.fitdata.setEnabled(False)
+        self.animfit = QtCore.QPropertyAnimation(self.fitdata, b"zcolor")
+        self.animfit.setDuration(750)
+        self.animfit.setLoopCount(1)
+        self.animfit.setStartValue(QtGui.QColor(0,0,0,0.5))
+        self.animfit.setKeyValueAt(0.1, QtGui.QColor("lightblue"))
+        self.animfit.setKeyValueAt(0.9, QtGui.QColor("lightblue"))
+        self.animfit.setEndValue(QtGui.QColor(0,0,0,0.5))
+
+        # Neutron Count Data File 2
+        self.countfile2 = QtWidgets.QPushButton(self.centralwidget)
+        self.countfile2.setGeometry(QtCore.QRect(10, 610, 50, 50))
+        self.countfile2.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.countfile2.setFont(font3)
+        self.countfile2.setCheckable(False)
+        self.countfile2.setText("Load\nData")
+        self.countfile2.setObjectName("countfile2")
+
+        # Fit Neutron Count Data 2
+        self.fitdata2 = MyButton(self.centralwidget, font2, QtCore.QRect(10, 665, 50, 50),"Fit\nData")
+        self.fitdata2.setEnabled(False)
+        self.animfit2 = QtCore.QPropertyAnimation(self.fitdata, b"zcolor")
+        self.animfit2.setDuration(750)
+        self.animfit2.setLoopCount(1)
+        self.animfit2.setStartValue(QtGui.QColor(0,0,0,0.5))
+        self.animfit2.setKeyValueAt(0.1, QtGui.QColor("lightblue"))
+        self.animfit2.setKeyValueAt(0.9, QtGui.QColor("lightblue"))
+        self.animfit2.setEndValue(QtGui.QColor(0,0,0,0.5))
 
         TapeDriveWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(TapeDriveWindow)
@@ -264,7 +298,7 @@ class Ui_TapeDriveWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TapeDriveWindow)
 
     def retranslateUi(self, TapeDriveWindow):
-        degree_sign = u"\N{DEGREE SIGN}"
+        # degree_sign = u"\N{DEGREE SIGN}"
         _translate = QtCore.QCoreApplication.translate
         TapeDriveWindow.setWindowTitle(_translate("TapeDriveWindow", "Lakeshore 625 Control"))
         self.label_5.setText(_translate("TapeDriveWindow", "Lakeshore 625"))

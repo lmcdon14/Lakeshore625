@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import array
 import numpy as np
 import re
+from scipy import optimize
 
 class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 	def __init__(self, simulate=False):
@@ -30,8 +31,10 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		self.type = 'gpib'
 		self.con.toggled.connect(self.connection)
 		self.con.click()
-
+		self.fitdata.clicked.connect(self.fit_count_data)
+		self.fitdata2.clicked.connect(self.fit_count_data2)
 		self.countfile.clicked.connect(self.get_count_file)
+		self.countfile2.clicked.connect(self.get_count_file2)
 
 		self.ps1spinBox.valueChanged.connect(self.on_ps1_box)
 		self.ps2spinBox.valueChanged.connect(self.on_ps2_box)
@@ -87,12 +90,63 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 			
 	def get_count_file(self):
 		filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,'Open Neutron Count Data', QtCore.QDir.rootPath(), 'Text files (*.txt);;XML files (*.xml)')
-		
-		current, counts = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
-		self.sc.axes.cla()  # Clear the canvas.
-		self.sc.axes.plot(current, counts)
-		self.sc.draw()
+		print(filename)
+		if filename != '':
+			self.current, self.counts = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
+			self.sc0.axes.cla()  # Clear the canvas.
+			self.sc0.axes.plot(self.current, self.counts)
+			self.sc0.draw()
+			self.centralwidget.show()
+
+			self.fitdata.setEnabled(True)
+
+	def get_count_file2(self):
+		filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,'Open Neutron Count Data', QtCore.QDir.rootPath(), 'Text files (*.txt);;XML files (*.xml)')
+		print(filename)
+		if filename != '':
+			self.current2, self.counts2 = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
+			self.sc1.axes.cla()  # Clear the canvas.
+			self.sc1.axes.plot(self.current2, self.counts2)
+			self.sc1.draw()
+			self.centralwidget.show()
+
+			self.fitdata2.setEnabled(True)
+
+	def test_func(self, x, a, b, p, c):
+		return a * np.cos(b * x + p) + c 
+
+	def fit_count_data(self):
+		ind_max = np.argmax(self.counts)
+		ind_min = np.argmin(self.counts)
+		freq = (math.pi)/(abs(self.current[ind_max] - self.current[ind_min]))
+		phase = math.pi/self.current[ind_min]
+		self.params, params_covariance = optimize.curve_fit(self.test_func, self.current, self.counts, p0=[max(self.counts), freq, phase, max(self.counts)/2])
+		print(self.params)
+		#print(params_covariance)
+		self.sc0.axes.cla()  # Clear the canvas.
+		self.sc0.axes.plot(self.current, self.counts, label='Raw Counts')
+		self.sc0.axes.plot(self.current, self.test_func(self.current, self.params[0], self.params[1], self.params[2], self.params[3]), label='A*cos(b*i+phi)+c')
+		self.sc0.axes.legend(loc='best')
+		self.sc0.draw()
 		self.centralwidget.show()
+
+	def fit_count_data2(self):
+		ind_max = np.argmax(self.counts2)
+		ind_min = np.argmin(self.counts2)
+		freq = (math.pi)/(abs(self.current2[ind_max] - self.current2[ind_min]))
+		phase = math.pi/self.current2[ind_min]
+		self.params2, params_covariance = optimize.curve_fit(self.test_func, self.current2, self.counts2, p0=[max(self.counts2), freq, phase, max(self.counts2)/2])
+		print(self.params2)
+		#print(params_covariance)
+		self.sc1.axes.cla()  # Clear the canvas.
+		self.sc1.axes.plot(self.current2, self.counts2, label='Raw Counts')
+		self.sc1.axes.plot(self.current2, self.test_func(self.current2, self.params2[0], self.params2[1], self.params2[2], self.params2[3]), label='A*cos(b*i+phi)+c')
+		self.sc1.axes.legend(loc='best')
+		self.sc1.draw()
+		self.centralwidget.show()
+
+	def save_fit(self):
+		pass
 
 	def on_ps1_box(self):
 		val = self.ps1spinBox.value()
