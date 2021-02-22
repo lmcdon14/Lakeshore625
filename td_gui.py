@@ -68,11 +68,11 @@ class MyButton(QtWidgets.QPushButton):
 
 class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(6, 1, (1, 5), xlabel='Current(A)', ylabel='Neutron Counts')
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(6, 1, (1, 5), xlabel='Current(A)', ylabel='Neutron Counts')
         #fig.text(0.5, 0.02, 'Current (A)', ha='center')
         #fig.text(0.02, 0.5, 'Neutron Counts', va='center', rotation='vertical')
-        super(MplCanvas, self).__init__(fig)
+        super(MplCanvas, self).__init__(self.fig)
 
 class Ui_TapeDriveWindow(object):
     def setupUi(self, TapeDriveWindow):
@@ -280,6 +280,44 @@ class Ui_TapeDriveWindow(object):
         self.animfit2.setKeyValueAt(0.1, QtGui.QColor("lightblue"))
         self.animfit2.setKeyValueAt(0.9, QtGui.QColor("lightblue"))
         self.animfit2.setEndValue(QtGui.QColor(0,0,0,0.5))
+
+        # Current Estimator 1
+        self.current_est1 = QtWidgets.QLineEdit(self.centralwidget)
+        self.current_est1.setGeometry(QtCore.QRect(380, 512, 60, 40))
+        self.current_est1.setFont(font)
+        self.current_est1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.current_est1.setStyleSheet("color: black;")
+        self.current_est1.setObjectName("current_est1")
+        self.current_est1.setEnabled(False)
+
+        # Current Value Estimator 1
+        self.val_est1 = QtWidgets.QLineEdit(self.centralwidget)
+        self.val_est1.setGeometry(QtCore.QRect(460, 512, 60, 40))
+        self.val_est1.setFont(font)
+        self.val_est1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.val_est1.setStyleSheet("color: black;")
+        self.val_est1.setObjectName("val_est1")
+        self.val_est1.setEnabled(False)
+        self.val_est1.setReadOnly(True)
+
+        # Current Estimator 2
+        self.current_est2 = QtWidgets.QLineEdit(self.centralwidget)
+        self.current_est2.setGeometry(QtCore.QRect(380, 842, 60, 40))
+        self.current_est2.setFont(font)
+        self.current_est2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.current_est2.setStyleSheet("color: black;")
+        self.current_est2.setObjectName("current_est2")
+        self.current_est2.setEnabled(False)
+
+        # Current Value Estimator 2
+        self.val_est2 = QtWidgets.QLineEdit(self.centralwidget)
+        self.val_est2.setGeometry(QtCore.QRect(460, 842, 60, 40))
+        self.val_est2.setFont(font)
+        self.val_est2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.val_est2.setStyleSheet("color: black;")
+        self.val_est2.setObjectName("val_est1")
+        self.val_est2.setEnabled(False)
+        self.val_est2.setReadOnly(True)
 
         TapeDriveWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(TapeDriveWindow)

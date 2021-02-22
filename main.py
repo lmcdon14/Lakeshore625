@@ -16,6 +16,12 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		super().__init__()
 		self.setupUi(self)
 		self.sim = simulate
+		self.params = [0,0,0,0]
+		self.params2 = self.params
+		self.current = [0,1,2,3,4]
+		self.counts = [10,1,20,3,40]
+		self.current2 = self.current
+		self.counts2 = self.counts
 
 		exitAction = QtWidgets.QAction(QtGui.QIcon('pics/exit.png'), '&Exit', self)
 		exitAction.setShortcut('Ctrl+Q')
@@ -35,6 +41,8 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		self.fitdata2.clicked.connect(self.fit_count_data2)
 		self.countfile.clicked.connect(self.get_count_file)
 		self.countfile2.clicked.connect(self.get_count_file2)
+		self.current_est1.editingFinished.connect(self.est1)
+		self.current_est2.editingFinished.connect(self.est2)
 
 		self.ps1spinBox.valueChanged.connect(self.on_ps1_box)
 		self.ps2spinBox.valueChanged.connect(self.on_ps2_box)
@@ -94,6 +102,8 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		if filename != '':
 			self.current, self.counts = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
 			self.sc0.axes.cla()  # Clear the canvas.
+			self.sc0.axes.set_xlabel('Current(A)')
+			self.sc0.axes.set_ylabel('Neutron Counts')
 			self.sc0.axes.plot(self.current, self.counts)
 			self.sc0.draw()
 			self.centralwidget.show()
@@ -106,47 +116,120 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		if filename != '':
 			self.current2, self.counts2 = np.loadtxt(filename, delimiter="\t", skiprows = 1, unpack=True)
 			self.sc1.axes.cla()  # Clear the canvas.
+			self.sc1.axes.set_xlabel('Current(A)')
+			self.sc1.axes.set_ylabel('Neutron Counts')
 			self.sc1.axes.plot(self.current2, self.counts2)
 			self.sc1.draw()
 			self.centralwidget.show()
 
 			self.fitdata2.setEnabled(True)
 
-	def test_func(self, x, a, b, p, c):
+	def test_func(self, x, a=0, b=0, p=0, c=0):
 		return a * np.cos(b * x + p) + c 
 
 	def fit_count_data(self):
 		ind_max = np.argmax(self.counts)
 		ind_min = np.argmin(self.counts)
 		freq = (math.pi)/(abs(self.current[ind_max] - self.current[ind_min]))
-		phase = math.pi/self.current[ind_min]
+		if self.current[ind_min] == 0:
+			phase = 0
+		else:
+			phase = -math.pi/self.current[ind_min]
 		self.params, params_covariance = optimize.curve_fit(self.test_func, self.current, self.counts, p0=[max(self.counts), freq, phase, max(self.counts)/2])
 		print(self.params)
 		#print(params_covariance)
 		self.sc0.axes.cla()  # Clear the canvas.
+		self.sc0.axes.set_xlabel('Current(A)')
+		self.sc0.axes.set_ylabel('Neutron Counts')
 		self.sc0.axes.plot(self.current, self.counts, label='Raw Counts')
 		self.sc0.axes.plot(self.current, self.test_func(self.current, self.params[0], self.params[1], self.params[2], self.params[3]), label='A*cos(b*i+phi)+c')
 		self.sc0.axes.legend(loc='best')
 		self.sc0.draw()
 		self.centralwidget.show()
 
+		self.current_est1.setEnabled(True)
+
 	def fit_count_data2(self):
 		ind_max = np.argmax(self.counts2)
 		ind_min = np.argmin(self.counts2)
 		freq = (math.pi)/(abs(self.current2[ind_max] - self.current2[ind_min]))
-		phase = math.pi/self.current2[ind_min]
+		if self.current2[ind_min] == 0:
+			phase = 0
+		else:
+			phase = -math.pi/self.current2[ind_min]
 		self.params2, params_covariance = optimize.curve_fit(self.test_func, self.current2, self.counts2, p0=[max(self.counts2), freq, phase, max(self.counts2)/2])
 		print(self.params2)
 		#print(params_covariance)
 		self.sc1.axes.cla()  # Clear the canvas.
+		self.sc1.axes.set_xlabel('Current(A)')
+		self.sc1.axes.set_ylabel('Neutron Counts')
 		self.sc1.axes.plot(self.current2, self.counts2, label='Raw Counts')
 		self.sc1.axes.plot(self.current2, self.test_func(self.current2, self.params2[0], self.params2[1], self.params2[2], self.params2[3]), label='A*cos(b*i+phi)+c')
 		self.sc1.axes.legend(loc='best')
 		self.sc1.draw()
 		self.centralwidget.show()
 
-	def save_fit(self):
-		pass
+		self.current_est2.setEnabled(True)
+
+	def est1(self):
+		val = self.current_est1.text()
+		check = val.find('/')
+		if check != -1:
+			ind = val.index('/')
+			coef = float(val[:ind])/float(val[ind+1:])
+		else:
+			coef = float(val)
+		self.current_est1.setText("{:5.3f}".format(coef))
+
+		if self.params[1] != 0:
+			self.i_est = (coef*math.pi-self.params[2]-math.pi)/self.params[1]
+		else:
+			self.i_est = (coef*math.pi-self.params[2]-math.pi)
+
+		self.count_est = self.test_func(self.i_est, self.params[0], self.params[1], self.params[2], self.params[3])
+		
+		self.sc0.axes.cla()  # Clear the canvas.
+		self.sc0.axes.set_xlabel('Current(A)')
+		self.sc0.axes.set_ylabel('Neutron Counts')
+		self.sc0.axes.plot(self.current, self.counts, label='Raw Counts')
+		self.sc0.axes.plot(self.current, self.test_func(self.current, self.params[0], self.params[1], self.params[2], self.params[3]), label='A*cos(b*i+phi)+c')
+		self.sc0.axes.plot(self.i_est, self.count_est, 'r*', markersize=10)
+		self.sc0.axes.legend(loc='best')
+		self.sc0.draw()
+		self.centralwidget.show()
+
+		self.val_est1.setEnabled(True)
+		self.val_est1.setText("{:5.3f}".format(self.i_est))
+
+	def est2(self):
+		val = self.current_est2.text()
+		check = val.find('/')
+		if check != -1:
+			ind = val.index('/')
+			coef = float(val[:ind])/float(val[ind+1:])
+		else:
+			coef = float(val)
+		self.current_est2.setText("{:5.3f}".format(coef))
+
+		if self.params2[1] != 0:
+			self.i_est2 = (coef*math.pi-self.params2[2]-math.pi)/self.params2[1]
+		else:
+			self.i_est2 = (coef*math.pi-self.params2[2]-math.pi)
+
+		self.count_est2 = self.test_func(self.i_est2, self.params2[0], self.params2[1], self.params2[2], self.params2[3])
+		
+		self.sc1.axes.cla()  # Clear the canvas.
+		self.sc1.axes.set_xlabel('Current(A)')
+		self.sc1.axes.set_ylabel('Neutron Counts')
+		self.sc1.axes.plot(self.current2, self.counts2, label='Raw Counts')
+		self.sc1.axes.plot(self.current2, self.test_func(self.current2, self.params2[0], self.params2[1], self.params2[2], self.params2[3]), label='A*cos(b*i+phi)+c')
+		self.sc1.axes.plot(self.i_est2, self.count_est2, 'r*', markersize=10)
+		self.sc1.axes.legend(loc='best')
+		self.sc1.draw()
+		self.centralwidget.show()
+
+		self.val_est2.setEnabled(True)
+		self.val_est2.setText("{:5.3f}".format(self.i_est2))
 
 	def on_ps1_box(self):
 		val = self.ps1spinBox.value()
