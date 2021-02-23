@@ -22,6 +22,7 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		self.counts = [10,1,20,3,40]
 		self.current2 = self.current
 		self.counts2 = self.counts
+		self.tester = 0
 
 		exitAction = QtWidgets.QAction(QtGui.QIcon('pics/exit.png'), '&Exit', self)
 		exitAction.setShortcut('Ctrl+Q')
@@ -63,10 +64,11 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					print("Connecting devices.")
 					self.rm = visa.ResourceManager()
 					self.resources = self.rm.list_resources()
-					self.instruments = []
+					print(self.resources)
+					self.instruments = [0]*2
 					i=0
 					for re in self.resources:
-						if re[0:3] == 'GPIB':
+						if re[0:4] == 'GPIB':
 							self.instruments[i] = self.rm.open_resource(re, read_termination='\r\n', write_termination='\r\n')
 							self.instruments[i].write('MODE 1')
 							print(self.instruments[i].query('*IDN?"'))
@@ -89,8 +91,9 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 				if self.sim == False:
 					if len(self.instruments) > 0:
 						for ind, inst in enumerate(self.instruments):
-							inst.close()
-							print("Instrument {:d} closed.".format(ind))
+							if inst != 0:
+								inst.close()
+								print("Instrument {:d} closed.".format(ind))
 					else:
 						print("No instruments to close.")
 				else:
@@ -235,7 +238,7 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		val = self.ps1spinBox.value()
 		if self.sim == False:
 			self.instruments[0].write('TRIG ' + str(val))
-			print(self.instruments[0].read())
+			#print(self.instruments[0].read())
 			
 		print("Supply 1 set to {:3.2f}A when triggered.".format(val))
 
@@ -243,7 +246,7 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		val = self.ps2spinBox.value()
 		if self.sim == False:
 			self.instruments[1].write('TRIG ' + str(val))
-			print(self.instruments[1].read())
+			#print(self.instruments[1].read())
 		
 		print("Supply 2 set to {:3.2f}A when triggered.".format(val))
 
@@ -263,9 +266,9 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					# set background color back to light-grey 
 					self.ps1Out.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;") 
 					inst.write('STOP')
-					print(self.inst.read())
+					#print(self.inst.read())
 					inst.write('TRIG 0.00')
-					print(self.inst.read())
+					#print(self.inst.read())
 					inst.write('*TRG')       
 					print("Supply 1 ramping to 0.00A.")
 
@@ -285,18 +288,23 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					# set background color back to light-grey 
 					self.ps2Out.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;") 
 					inst.write('STOP')
-					print(self.inst.read())
+					#print(self.inst.read())
 					inst.write('TRIG 0.00')
-					print(self.inst.read())
+					#print(self.inst.read())
 					inst.write('*TRG')       
 					print("Supply 2 ramping to 0.00A.")
 
 	def recurring_timer(self):
 		if self.sim==False:
+			self.tester += 1 
 			#Update power supply readouts
 			if len(self.instruments) > 0:
+				#print(self.instruments)
 				for inst in self.instruments:
-					self.ps1readspinBox.setProperty("value", inst.query('RDGI?'))
+					if inst != 0:
+						#print(inst)
+						val = inst.query('RDGI?')
+						self.ps1readspinBox.setProperty("value", float(val))
 			
 	def closeEvent(self, event):
 		print("Closing program.")
@@ -310,6 +318,9 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 
 if __name__ == '__main__':
 	import sys
+	#QtWidgets.QApplication.setAttribute(QtCore.Qt.
+	QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+	QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 	app = QtWidgets.QApplication(sys.argv)
 	app_icon = QtGui.QIcon(r"C:\Users\qlz\Dropbox (ORNL)\Projects\26 - Superconducting Magnet\Lakeshore625\Resources\Lakeshore.png")
 	app.setWindowIcon(app_icon)
