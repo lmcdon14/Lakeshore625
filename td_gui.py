@@ -153,6 +153,30 @@ class Ui_TapeDriveWindow(object):
         self.label_ps2.setStyleSheet("QLabel {font-size: 20px; color: black; border-radius: 5px;}")
         self.label_ps2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_ps2.setObjectName("label_ps2")
+		# Phi1 Label
+        self.label_p1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_p1.setGeometry(QtCore.QRect(440, 512, 20, 40))
+        self.label_p1.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_p1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_p1.setObjectName("label_p1")
+		 # I1 estimate Label
+        self.label_i1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_i1.setGeometry(QtCore.QRect(520, 512, 20, 40))
+        self.label_i1.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_i1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_i1.setObjectName("label_i1")
+		# Phi2 Label
+        self.label_p2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_p2.setGeometry(QtCore.QRect(440, 842, 20, 40))
+        self.label_p2.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_p2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_p2.setObjectName("label_p2")
+		 # I2 estimate Label
+        self.label_i2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_i2.setGeometry(QtCore.QRect(520, 842, 20, 40))
+        self.label_i2.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_i2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_i2.setObjectName("label_i2")
         
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -336,7 +360,9 @@ class Ui_TapeDriveWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TapeDriveWindow)
 
     def retranslateUi(self, TapeDriveWindow):
-        # degree_sign = u"\N{DEGREE SIGN}"
+        #degree_sign = u"\N{DEGREE SIGN}"
+        phi = u"\u03A6"
+        pi = u"\u03C0"
         _translate = QtCore.QCoreApplication.translate
         TapeDriveWindow.setWindowTitle(_translate("TapeDriveWindow", "Lakeshore 625 Control"))
         self.label_5.setText(_translate("TapeDriveWindow", "Lakeshore 625"))
@@ -344,6 +370,10 @@ class Ui_TapeDriveWindow(object):
         self.label_mr.setText(_translate("TapeDriveWindow", "Current\nReadout (A)"))
         self.label_ps1.setText(_translate("TapeDriveWindow", "Supply 1"))
         self.label_ps2.setText(_translate("TapeDriveWindow", "Supply 2"))
+        self.label_p1.setText(_translate("TapeDriveWindow", phi + pi))
+        self.label_i1.setText(_translate("TapeDriveWindow", "i"))
+        self.label_p2.setText(_translate("TapeDriveWindow", phi + pi))
+        self.label_i2.setText(_translate("TapeDriveWindow", "i"))
         self.actionQuit.setText(_translate("TapeDriveWindow", "Exit"))
         self.actionQuit.setShortcut(_translate("TapeDriveWindow", "Meta+Q"))
         self.actionNothingHere.setText(_translate("TapeDriveWindow", "NothingHere"))
