@@ -11,8 +11,67 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import sys
 import re
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+# Regular expression to find floats. Match groups are the whole string, the
+# whole coefficient, the decimal part of the coefficient, and the exponent
+# part.
+_float_re = re.compile(r'(([+-]?\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)')
+
+def valid_float_string(string):
+	match = _float_re.search(string)
+	return match.groups()[0] == string if match else False
+
+class FloatValidator(QtGui.QValidator):
+	def validate(self, string, position):
+		if valid_float_string(string):
+			state = QtGui.QValidator.Acceptable
+		elif string == "" or string[position-1] in 'e.-+':
+			state = QtGui.QValidator.Intermediate
+		else:
+			state = QtGui.QValidator.Invalid
+		return (state, string, position)
+
+	def fixup(self, text):
+		match = _float_re.search(text)
+		return match.groups()[0] if match else ""
+
+class ScientificDoubleSpinBox(QtWidgets.QDoubleSpinBox):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.validator = FloatValidator()
+		self.setMinimum(-np.inf)
+		self.setMaximum(np.inf)
+		self.setDecimals(3)
+		self.setDecimals(1000)
+
+	def validate(self, text, position):
+		return self.validator.validate(text, position)
+
+	def fixup(self, text):
+		return self.validator.fixup(text)
+
+	def valueFromText(self, text):
+		return float(text)
+
+	def textFromValue(self, value):
+		return format_float(value)
+
+	def stepBy(self, steps):
+		text = self.cleanText()
+		groups = _float_re.search(text).groups()
+		decimal = float(groups[1])
+		decimal += steps
+		new_string = "{:g}".format(decimal) + (groups[3] if groups[3] else "")
+		self.lineEdit().setText(new_string)
+
+def format_float(value):
+	"""Modified form of the 'g' format specifier."""
+	string = "{:g}".format(value).replace("e+", "e")
+	string = re.sub("e(-?)0*(\d+)", r"e\1\2", string) 
+	return string
 
 class MyButton(QtWidgets.QPushButton):
     def __init__(self, widget, font2, dims, text):
@@ -122,6 +181,7 @@ class Ui_TapeDriveWindow(object):
         font.setBold(True)
         font.setWeight(75)
         xmov = 50
+        shift = 330
 
         # PS Label
         self.label_5 = QtWidgets.QLabel(self.centralwidget)
@@ -153,6 +213,102 @@ class Ui_TapeDriveWindow(object):
         self.label_ps2.setStyleSheet("QLabel {font-size: 20px; color: black; border-radius: 5px;}")
         self.label_ps2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_ps2.setObjectName("label_ps2")
+		# Phi1 Label
+        self.label_p1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_p1.setGeometry(QtCore.QRect(440, 512, 20, 40))
+        self.label_p1.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_p1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_p1.setObjectName("label_p1")
+		# I1 estimate Label
+        self.label_i1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_i1.setGeometry(QtCore.QRect(520, 512, 20, 40))
+        self.label_i1.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_i1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_i1.setObjectName("label_i1")
+		# Phi2 Label
+        self.label_p2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_p2.setGeometry(QtCore.QRect(440, 842, 20, 40))
+        self.label_p2.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_p2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_p2.setObjectName("label_p2")
+		# I2 estimate Label
+        self.label_i2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_i2.setGeometry(QtCore.QRect(520, 842, 20, 40))
+        self.label_i2.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_i2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_i2.setObjectName("label_i2")
+		# A1 Label
+        self.label_a1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_a1.setGeometry(QtCore.QRect(535, 310, 20, 20))
+        self.label_a1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_a1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_a1.setObjectName("label_a1")
+		# b1 Label
+        self.label_b1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_b1.setGeometry(QtCore.QRect(535, 360, 20, 20))
+        self.label_b1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_b1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_b1.setObjectName("label_b1")
+		# phi1 Label
+        self.label_phi1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_phi1.setGeometry(QtCore.QRect(535, 410, 20, 20))
+        self.label_phi1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_phi1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_phi1.setObjectName("label_phi1")
+		# c1 Label
+        self.label_c1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_c1.setGeometry(QtCore.QRect(535, 460, 20, 20))
+        self.label_c1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_c1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_c1.setObjectName("label_c1")
+		# Init1 Label
+        self.label_init1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_init1.setGeometry(QtCore.QRect(565, 290, 20, 20))
+        self.label_init1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_init1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_init1.setObjectName("label_init1")
+		# Calc1 Label
+        self.label_calc1 = QtWidgets.QLabel(self.centralwidget)
+        self.label_calc1.setGeometry(QtCore.QRect(605, 290, 20, 20))
+        self.label_calc1.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_calc1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_calc1.setObjectName("label_calc1")
+		# A2 Label
+        self.label_a2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_a2.setGeometry(QtCore.QRect(535, 310+shift, 20, 20))
+        self.label_a2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_a2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_a2.setObjectName("label_a2")
+		# b2 Label
+        self.label_b2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_b2.setGeometry(QtCore.QRect(535, 360+shift, 20, 20))
+        self.label_b2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_b2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_b2.setObjectName("label_b2")
+		# phi2 Label
+        self.label_phi2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_phi2.setGeometry(QtCore.QRect(535, 410+shift, 20, 20))
+        self.label_phi2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_phi2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_phi2.setObjectName("label_phi2")
+		# c2 Label
+        self.label_c2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_c2.setGeometry(QtCore.QRect(535, 460+shift, 20, 20))
+        self.label_c2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_c2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_c2.setObjectName("label_c2")
+		# Init2 Label
+        self.label_init2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_init2.setGeometry(QtCore.QRect(565, 290+shift, 20, 20))
+        self.label_init2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_init2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_init2.setObjectName("label_init2")
+		# Calc2 Label
+        self.label_calc2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_calc2.setGeometry(QtCore.QRect(605, 290+shift, 20, 20))
+        self.label_calc2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
+        self.label_calc2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_calc2.setObjectName("label_calc2")
         
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -228,6 +384,13 @@ class Ui_TapeDriveWindow(object):
         self.ps2Out.setCheckable(True)
         self.ps2Out.setText("Output Enable")
         self.ps2Out.setObjectName("ps2Out")
+		# Supply Switch
+        self.psFlip = QtWidgets.QPushButton(self.centralwidget)
+        self.psFlip.setGeometry(QtCore.QRect(10, 115-28, 80, 55))
+        self.psFlip.setStyleSheet("QPushButton {background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;}")
+        self.psFlip.setFont(font2)
+        self.psFlip.setText("Switch\nOrder")
+        self.psFlip.setObjectName("psFlip")
 
         # PS Connection
         self.con = QtWidgets.QPushButton(self.centralwidget)
@@ -319,6 +482,164 @@ class Ui_TapeDriveWindow(object):
         self.val_est2.setEnabled(False)
         self.val_est2.setReadOnly(True)
 
+
+        # Curve fitting controls
+        font4 = font
+        font4.setPointSize(10)
+        font4.setBold(False)
+
+        # Supply 1
+        # A control
+        self.A1 = ScientificDoubleSpinBox(self.centralwidget)
+        self.A1.setGeometry(QtCore.QRect(555, 310, 40, 20))
+        self.A1.setFont(font4)
+        self.A1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.A1.setStyleSheet("color: black;")
+        self.A1.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.A1.setObjectName("A1")
+        # A readout
+        self.A1read = ScientificDoubleSpinBox(self.centralwidget)
+        self.A1read.setGeometry(QtCore.QRect(595, 310, 40, 20))
+        self.A1read.setFont(font4)
+        self.A1read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.A1read.setDecimals(3)
+        self.A1read.setStyleSheet("color: black;")
+        self.A1read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.A1read.setObjectName("A1read")
+        self.A1read.setReadOnly(True)
+		# b control
+        self.b1 = ScientificDoubleSpinBox(self.centralwidget)
+        self.b1.setGeometry(QtCore.QRect(555, 360, 40, 20))
+        self.b1.setFont(font4)
+        self.b1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.b1.setStyleSheet("color: black;")
+        self.b1.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.b1.setObjectName("b1")
+        # b readout
+        self.b1read = ScientificDoubleSpinBox(self.centralwidget)
+        self.b1read.setGeometry(QtCore.QRect(595, 360, 40, 20))
+        self.b1read.setFont(font4)
+        self.b1read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.b1read.setDecimals(3)
+        self.b1read.setStyleSheet("color: black;")
+        self.b1read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.b1read.setObjectName("b1read")
+        self.b1read.setReadOnly(True)
+		# phi control
+        self.phi1 = ScientificDoubleSpinBox(self.centralwidget)
+        self.phi1.setGeometry(QtCore.QRect(555, 410, 40, 20))
+        self.phi1.setFont(font4)
+        self.phi1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.phi1.setStyleSheet("color: black;")
+        self.phi1.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.phi1.setObjectName("phi1")
+        # phi readout
+        self.phi1read = ScientificDoubleSpinBox(self.centralwidget)
+        self.phi1read.setGeometry(QtCore.QRect(595, 410, 40, 20))
+        self.phi1read.setFont(font4)
+        self.phi1read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.phi1read.setDecimals(3)
+        self.phi1read.setStyleSheet("color: black;")
+        self.phi1read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.phi1read.setObjectName("phi1read")
+        self.phi1read.setReadOnly(True)
+		# c control
+        self.c1 = ScientificDoubleSpinBox(self.centralwidget)
+        self.c1.setGeometry(QtCore.QRect(555, 460, 40, 20))
+        self.c1.setFont(font4)
+        self.c1.setAlignment(QtCore.Qt.AlignHCenter)
+        self.c1.setStyleSheet("color: black;")
+        self.c1.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.c1.setObjectName("c1")
+        # c readout
+        self.c1read = ScientificDoubleSpinBox(self.centralwidget)
+        self.c1read.setGeometry(QtCore.QRect(595, 460, 40, 20))
+        self.c1read.setFont(font4)
+        self.c1read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.c1read.setDecimals(3)
+        self.c1read.setStyleSheet("color: black;")
+        self.c1read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.c1read.setObjectName("c1read")
+        self.c1read.setReadOnly(True)
+
+		# Supply 2
+        # A control
+        self.A2 = ScientificDoubleSpinBox(self.centralwidget)
+        self.A2.setGeometry(QtCore.QRect(555, 310+shift, 40, 20))
+        self.A2.setFont(font4)
+        self.A2.setRange(-1e15,1e15)
+        self.A2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.A2.setStyleSheet("color: black;")
+        self.A2.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.A2.setObjectName("A2")
+        # A readout
+        self.A2read = ScientificDoubleSpinBox(self.centralwidget)
+        self.A2read.setGeometry(QtCore.QRect(595, 310+shift, 40, 20))
+        self.A2read.setFont(font4)
+        self.A2read.setRange(-1e15,1e15)
+        self.A2read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.A2read.setStyleSheet("color: black;")
+        self.A2read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.A2read.setObjectName("A2read")
+        self.A2read.setReadOnly(True)
+		# b control
+        self.b2 = ScientificDoubleSpinBox(self.centralwidget)
+        self.b2.setGeometry(QtCore.QRect(555, 360+shift, 40, 20))
+        self.b2.setFont(font4)
+        self.b2.setRange(-1e15,1e15)
+        self.b2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.b2.setStyleSheet("color: black;")
+        self.b2.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.b2.setObjectName("b2")
+        # b readout
+        self.b2read = ScientificDoubleSpinBox(self.centralwidget)
+        self.b2read.setGeometry(QtCore.QRect(595, 360+shift, 40, 20))
+        self.b2read.setFont(font4)
+        self.b2read.setRange(-1e15,1e15)
+        self.b2read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.b2read.setStyleSheet("color: black;")
+        self.b2read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.b2read.setObjectName("b2read")
+        self.b2read.setReadOnly(True)
+		# phi control
+        self.phi2 = ScientificDoubleSpinBox(self.centralwidget)
+        self.phi2.setGeometry(QtCore.QRect(555, 410+shift, 40, 20))
+        self.phi2.setFont(font4)
+        self.phi2.setRange(-1e15,1e15)
+        self.phi2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.phi2.setStyleSheet("color: black;")
+        self.phi2.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.phi2.setObjectName("phi2")
+        # phi readout
+        self.phi2read = ScientificDoubleSpinBox(self.centralwidget)
+        self.phi2read.setGeometry(QtCore.QRect(595, 410+shift, 40, 20))
+        self.phi2read.setFont(font4)
+        self.phi2read.setRange(-1e15,1e15)
+        self.phi2read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.phi2read.setStyleSheet("color: black;")
+        self.phi2read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.phi2read.setObjectName("phi2read")
+        self.phi2read.setReadOnly(True)
+		# c control
+        self.c2 = ScientificDoubleSpinBox(self.centralwidget)
+        self.c2.setGeometry(QtCore.QRect(555, 460+shift, 40, 20))
+        self.c2.setFont(font4)
+        self.c2.setRange(-1e15,1e15)
+        self.c2.setAlignment(QtCore.Qt.AlignHCenter)
+        self.c2.setStyleSheet("color: black;")
+        self.c2.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.c2.setObjectName("c2")
+        # c readout
+        self.c2read = ScientificDoubleSpinBox(self.centralwidget)
+        self.c2read.setGeometry(QtCore.QRect(595, 460+shift, 40, 20))
+        self.c2read.setFont(font4)
+        self.c2read.setRange(-1e15,1e15)
+        self.c2read.setAlignment(QtCore.Qt.AlignHCenter)
+        self.c2read.setStyleSheet("color: black;")
+        self.c2read.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.c2read.setObjectName("c2read")
+        self.c2read.setReadOnly(True)
+
         TapeDriveWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(TapeDriveWindow)
         self.statusbar.setObjectName("statusbar")
@@ -336,7 +657,9 @@ class Ui_TapeDriveWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TapeDriveWindow)
 
     def retranslateUi(self, TapeDriveWindow):
-        # degree_sign = u"\N{DEGREE SIGN}"
+        #degree_sign = u"\N{DEGREE SIGN}"
+        phi = u"\u03A6"
+        pi = u"\u03C0"
         _translate = QtCore.QCoreApplication.translate
         TapeDriveWindow.setWindowTitle(_translate("TapeDriveWindow", "Lakeshore 625 Control"))
         self.label_5.setText(_translate("TapeDriveWindow", "Lakeshore 625"))
@@ -344,6 +667,22 @@ class Ui_TapeDriveWindow(object):
         self.label_mr.setText(_translate("TapeDriveWindow", "Current\nReadout (A)"))
         self.label_ps1.setText(_translate("TapeDriveWindow", "Supply 1"))
         self.label_ps2.setText(_translate("TapeDriveWindow", "Supply 2"))
+        self.label_p1.setText(_translate("TapeDriveWindow", phi + pi))
+        self.label_i1.setText(_translate("TapeDriveWindow", "i"))
+        self.label_p2.setText(_translate("TapeDriveWindow", phi + pi))
+        self.label_i2.setText(_translate("TapeDriveWindow", "i"))
+        self.label_a1.setText(_translate("TapeDriveWindow", "A"))
+        self.label_b1.setText(_translate("TapeDriveWindow", "b"))
+        self.label_phi1.setText(_translate("TapeDriveWindow", phi))
+        self.label_c1.setText(_translate("TapeDriveWindow", "c"))
+        self.label_init1.setText(_translate("TapeDriveWindow", "Init"))
+        self.label_calc1.setText(_translate("TapeDriveWindow", "Calc"))
+        self.label_a2.setText(_translate("TapeDriveWindow", "A"))
+        self.label_b2.setText(_translate("TapeDriveWindow", "b"))
+        self.label_phi2.setText(_translate("TapeDriveWindow", phi))
+        self.label_c2.setText(_translate("TapeDriveWindow", "c"))
+        self.label_init2.setText(_translate("TapeDriveWindow", "Init"))
+        self.label_calc2.setText(_translate("TapeDriveWindow", "Calc"))
         self.actionQuit.setText(_translate("TapeDriveWindow", "Exit"))
         self.actionQuit.setShortcut(_translate("TapeDriveWindow", "Meta+Q"))
         self.actionNothingHere.setText(_translate("TapeDriveWindow", "NothingHere"))
