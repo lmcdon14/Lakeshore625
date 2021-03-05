@@ -276,7 +276,6 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					self.ps1spinBox.setProperty("value", val1)
 					self.ps1spinBox.blockSignals(False)
 
-
 					if self.ps1Out.isChecked() != self.ps2Out.isChecked():
 						state1 = self.ps2Out.isChecked()
 
