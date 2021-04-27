@@ -315,7 +315,10 @@ class Ui_TapeDriveWindow(object):
         self.label_calc2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
         self.label_calc2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_calc2.setObjectName("label_calc2")
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0e2d7bb0e33a4206d7f5e6131fed904b695c9427
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.ps1spinBox.setGeometry(QtCore.QRect(110+35+xmov, 130, 100, 40))
