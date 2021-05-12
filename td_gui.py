@@ -315,6 +315,41 @@ class Ui_TapeDriveWindow(object):
         self.label_calc2.setStyleSheet("QLabel {font-size: 10px; color: black; border-radius: 5px;}")
         self.label_calc2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_calc2.setObjectName("label_calc2")
+        # Ramp Label
+        self.label_ramp = QtWidgets.QLabel(self.centralwidget)
+        self.label_ramp.setGeometry(QtCore.QRect(390, 240, 40, 20))
+        self.label_ramp.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_ramp.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_ramp.setObjectName("label_ramp")
+        # Clock Label
+        self.label_clock = QtWidgets.QLabel(self.centralwidget)
+        self.label_clock.setGeometry(QtCore.QRect(510, 80, 60, 40))
+        self.label_clock.setStyleSheet("QLabel {font-size: 12px; color: black; border-radius: 5px;}")
+        self.label_clock.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_clock.setObjectName("label_clock")
+
+        # Current scan control
+        self.ramp_control = QtWidgets.QLineEdit(self.centralwidget)
+        self.ramp_control.setGeometry(QtCore.QRect(430, 230, 200, 40))
+        self.ramp_control.setFont(font)
+        #self.ramp_control.setAlignment(QtCore.Qt.AlignHCenter)
+        self.ramp_control.setStyleSheet("QLabel {font-size: 20px; color: black; border-radius: 5px;}")
+        self.ramp_control.setObjectName("ramp_control")
+
+        # Universal clock for ramping
+        self.uni_clock = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.uni_clock.setGeometry(QtCore.QRect(570, 80, 60, 40))
+        self.uni_clock.setFont(font)
+        self.uni_clock.setDecimals(0)
+        self.uni_clock.setAlignment(QtCore.Qt.AlignHCenter)
+        self.uni_clock.setStyleSheet("color: lightgrey;")
+        self.uni_clock.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.uni_clock.setKeyboardTracking(False)
+        self.uni_clock.setMinimum(0.0)
+        self.uni_clock.setMaximum(120.0)
+        self.uni_clock.setProperty("value", 10)
+        self.uni_clock.setObjectName("uni_clock")
+
         # Power Supply Control 1
         self.ps1spinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.ps1spinBox.setGeometry(QtCore.QRect(110+35+xmov, 130, 100, 40))
@@ -327,7 +362,7 @@ class Ui_TapeDriveWindow(object):
         self.ps1spinBox.setKeyboardTracking(False)
         self.ps1spinBox.setMinimum(-20.0)
         self.ps1spinBox.setMaximum(20.0)
-        self.ps1spinBox.setProperty("value", 0.0)
+        self.ps1spinBox.setValue(0.0)
         self.ps1spinBox.setObjectName("ps1spinBox")
 		# Power Supply Ramp Control 1
         self.ps1rampspinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -335,6 +370,7 @@ class Ui_TapeDriveWindow(object):
         self.ps1rampspinBox.setFont(font)
         self.ps1rampspinBox.setReadOnly(True)
         self.ps1rampspinBox.setDecimals(3)
+        self.ps1rampspinBox.setSingleStep(0.1)
         self.ps1rampspinBox.setAlignment(QtCore.Qt.AlignHCenter)
         self.ps1rampspinBox.setStyleSheet("color: lightgrey;")
         self.ps1rampspinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
@@ -368,7 +404,7 @@ class Ui_TapeDriveWindow(object):
         self.ps2spinBox.setKeyboardTracking(False)
         self.ps2spinBox.setMinimum(-20.0)
         self.ps2spinBox.setMaximum(20.0)
-        self.ps2spinBox.setProperty("value", 0.0)
+        self.ps2spinBox.setValue(0.0)
         self.ps2spinBox.setObjectName("ps1spinBox")
 		# Power Supply Ramp Control 1
         self.ps2rampspinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -376,6 +412,7 @@ class Ui_TapeDriveWindow(object):
         self.ps2rampspinBox.setFont(font)
         self.ps2rampspinBox.setReadOnly(True)
         self.ps2rampspinBox.setDecimals(3)
+        self.ps2rampspinBox.setSingleStep(0.1)
         self.ps2rampspinBox.setAlignment(QtCore.Qt.AlignHCenter)
         self.ps2rampspinBox.setStyleSheet("color: lightgrey;")
         self.ps2rampspinBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
@@ -514,7 +551,6 @@ class Ui_TapeDriveWindow(object):
         self.val_est2.setObjectName("val_est1")
         self.val_est2.setEnabled(False)
         self.val_est2.setReadOnly(True)
-
 
         # Curve fitting controls
         font4 = font
@@ -717,6 +753,8 @@ class Ui_TapeDriveWindow(object):
         self.label_c2.setText(_translate("TapeDriveWindow", "c"))
         self.label_init2.setText(_translate("TapeDriveWindow", "Init"))
         self.label_calc2.setText(_translate("TapeDriveWindow", "Calc"))
+        self.label_ramp.setText(_translate("TapeDriveWindow", "scan"))
+        self.label_clock.setText(_translate("TapeDriveWindow", "Ramp\ntimer (s)"))
         self.actionQuit.setText(_translate("TapeDriveWindow", "Exit"))
         self.actionQuit.setShortcut(_translate("TapeDriveWindow", "Meta+Q"))
         self.actionNothingHere.setText(_translate("TapeDriveWindow", "NothingHere"))

@@ -24,6 +24,12 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		self.counts2 = self.counts
 		self.tester = 0
 		self.phi = u"\u03A6"
+		self.rampit1 = 0
+		self.rampit2 = 0
+		self.vals1 = [None]*3
+		self.vals2 = [None]*3
+		self.ramp1timer = QtCore.QTimer()
+		self.ramp2timer = QtCore.QTimer()
 
 		exitAction = QtWidgets.QAction(QtGui.QIcon('pics/exit.png'), '&Exit', self)
 		exitAction.setShortcut('Ctrl+Q')
@@ -48,10 +54,11 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 
 		self.ps1spinBox.valueChanged.connect(self.on_ps1_box)
 		self.ps2spinBox.valueChanged.connect(self.on_ps2_box)
-		self.ps1rampspinBox.valueChanged.connect(self.on_ramp_1)
-		self.ps2rampspinBox.valueChanged.connect(self.on_ramp_2)
+		self.ps1rampspinBox.valueChanged.connect(self.on_ramp_1_change)
+		self.ps2rampspinBox.valueChanged.connect(self.on_ramp_2_change)
 		self.ps1Out.toggled.connect(self.ps1enable)
 		self.ps2Out.toggled.connect(self.ps2enable)
+		self.ramp_control.editingFinished.connect(self.ramp_setting)
 
 		self.psFlip.clicked.connect(self.switcher)
 		
@@ -98,10 +105,10 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 						self.instruments[0].write('TRIG ' + str(val))
 						self.ps1readspinBox.setProperty("value", float(val))
 						self.ps1spinBox.blockSignals(True)
-						self.ps1spinBox.setProperty("value", float(val))
+						self.ps1spinBox.setValue(float(val))
 						self.ps1spinBox.blockSignals(False)
 						self.ps1rampspinBox.blockSignals(True)
-						self.ps1rampspinBox.setProperty("value", 0.000)
+						self.ps1rampspinBox.setProperty("value", 0.100)
 						self.ps1rampspinBox.blockSignals(False)
 						if (abs(float(val)) >= 0.01):
 							if self.ps1Out.isChecked() == False:
@@ -120,10 +127,10 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 						self.instruments[1].write('TRIG ' + str(val))
 						self.ps2readspinBox.setProperty("value", float(val))
 						self.ps2spinBox.blockSignals(True)
-						self.ps2spinBox.setProperty("value", float(val))
+						self.ps2spinBox.setValue(float(val))
 						self.ps2spinBox.blockSignals(False)
 						self.ps2rampspinBox.blockSignals(True)
-						self.ps2rampspinBox.setProperty("value", 0.000)
+						self.ps2rampspinBox.setProperty("value", 0.100)
 						self.ps2rampspinBox.blockSignals(False)
 						if (abs(float(val)) >= 0.01):
 							if self.ps2Out.isChecked() == False:
@@ -133,6 +140,36 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 								self.ps2Out.setStyleSheet("background-color: lightblue; color: white; border-radius:4px;") 
 				else:
 					print("Simulating device connection.")
+					# PS1
+					self.ps1spinBox.setStyleSheet("color: black;")
+					self.ps1rampspinBox.setStyleSheet("color: black;")
+					self.ps1readspinBox.setStyleSheet("color: black;")
+					self.ps1spinBox.setReadOnly(False)
+					self.ps1rampspinBox.setReadOnly(False)
+					self.ps1Out.setEnabled(True)
+					val = 0
+					self.ps1readspinBox.setProperty("value", float(val))
+					self.ps1spinBox.blockSignals(True)
+					self.ps1spinBox.setValue(float(val))
+					self.ps1spinBox.blockSignals(False)
+					self.ps1rampspinBox.blockSignals(True)
+					self.ps1rampspinBox.setProperty("value", 0.100)
+					self.ps1rampspinBox.blockSignals(False)
+					# PS2
+					self.ps2spinBox.setStyleSheet("color: black;")
+					self.ps2rampspinBox.setStyleSheet("color: black;")
+					self.ps2readspinBox.setStyleSheet("color: black;")
+					self.ps2spinBox.setReadOnly(False)
+					self.ps2rampspinBox.setReadOnly(False)
+					self.ps2Out.setEnabled(True)
+					val = 0
+					self.ps2readspinBox.setProperty("value", float(val))
+					self.ps2spinBox.blockSignals(True)
+					self.ps2spinBox.setValue(float(val))
+					self.ps2spinBox.blockSignals(False)
+					self.ps2rampspinBox.blockSignals(True)
+					self.ps2rampspinBox.setProperty("value", 0.100)
+					self.ps2rampspinBox.blockSignals(False)
 			else:
 				self.con.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;")
 				self.ps1spinBox.setReadOnly(True)
@@ -186,13 +223,13 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 						self.ps1rampspinBox.setStyleSheet("color: black;")
 						self.ps1readspinBox.setStyleSheet("color: black;")
 						self.ps1spinBox.blockSignals(True)
-						self.ps1spinBox.setProperty("value", self.ps2spinBox.value())
+						self.ps1spinBox.setValue(self.ps2spinBox.value())
 						self.ps1spinBox.blockSignals(False)
 						self.ps1rampspinBox.blockSignals(True)
 						self.ps1rampspinBox.setProperty("value", 0.000)
 						self.ps1rampspinBox.blockSignals(False)
-						if self.ramp2recurring_timer.isActive():
-							self.ramp2recurring_timer.stop()
+						if self.ramp2timer.isActive():
+							self.ramp2timer.stop()
 							print("Stopping current ramp")
 
 						self.ps1Out.setEnabled(True)
@@ -204,7 +241,7 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 						self.ps2spinBox.setReadOnly(True)
 						self.ps2rampspinBox.setReadOnly(True)
 						self.ps2spinBox.blockSignals(True)
-						self.ps2spinBox.setProperty("value", 0.00)
+						self.ps2spinBox.setValue(0.00)
 						self.ps2readspinBox.setProperty("value", 0.00)
 						self.ps2spinBox.blockSignals(False)
 						self.ps2rampspinBox.blockSignals(True)
@@ -223,13 +260,13 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					self.ps2rampspinBox.setStyleSheet("color: black;")
 					self.ps2readspinBox.setStyleSheet("color: black;")
 					self.ps2spinBox.blockSignals(True)
-					self.ps2spinBox.setProperty("value", self.ps1spinBox.value())
+					self.ps2spinBox.setValue(self.ps1spinBox.value())
 					self.ps2spinBox.blockSignals(False)
 					self.ps2rampspinBox.blockSignals(True)
 					self.ps2rampspinBox.setProperty("value", 0.000)
 					self.ps2rampspinBox.blockSignals(False)
-					if self.ramp1recurring_timer.isActive():
-						self.ramp1recurring_timer.stop()
+					if self.ramp1timer.isActive():
+						self.ramp1timer.stop()
 						print("Stopping current ramp")
 
 					self.ps2Out.setEnabled(True)
@@ -241,7 +278,7 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					self.ps1spinBox.setReadOnly(True)
 					self.ps1rampspinBox.setReadOnly(True)
 					self.ps1spinBox.blockSignals(True)
-					self.ps1spinBox.setProperty("value", 0.00)
+					self.ps1spinBox.setValue(0.00)
 					self.ps1readspinBox.setProperty("value", 0.00)
 					self.ps1spinBox.blockSignals(False)
 					self.ps1rampspinBox.blockSignals(True)
@@ -254,11 +291,11 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					self.ps1Out.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;")
 				# save intermediate values and switch everything
 				else:
-					if self.ramp1recurring_timer.isActive():
-						self.ramp1recurring_timer.stop()
+					if self.ramp1timer.isActive():
+						self.ramp1timer.stop()
 						print("Stopping current ramp 1")
-					if self.ramp2recurring_timer.isActive():
-						self.ramp2recurring_timer.stop()
+					if self.ramp2timer.isActive():
+						self.ramp2timer.stop()
 						print("Stopping current ramp 2")
 
 					self.ps1rampspinBox.blockSignals(True)
@@ -270,10 +307,10 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 
 					val1 = self.ps2spinBox.value()
 					self.ps2spinBox.blockSignals(True)
-					self.ps2spinBox.setProperty("value", self.ps1spinBox.value())
+					self.ps2spinBox.setValue(self.ps1spinBox.value())
 					self.ps2spinBox.blockSignals(False)
 					self.ps1spinBox.blockSignals(True)
-					self.ps1spinBox.setProperty("value", val1)
+					self.ps1spinBox.setValue(val1)
 					self.ps1spinBox.blockSignals(False)
 
 					if self.ps1Out.isChecked() != self.ps2Out.isChecked():
@@ -483,6 +520,20 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 		self.val_est2.setEnabled(True)
 		self.val_est2.setText("{:5.3f}".format(self.i_est2))
 
+	def on_ramp_1_change(self):
+		val = self.ps1rampspinBox.value()
+		if self.sim == False:
+			self.instruments[0].write('RATE ' + str(val))
+
+		print("Supply 1 ramp rate set to {:3.2f}A/s.".format(val))
+
+	def on_ramp_2_change(self):
+		val = self.ps2rampspinBox.value()
+		if self.sim == False:
+			self.instruments[1].write('RATE ' + str(val))
+
+		print("Supply 2 ramp rate set to {:3.2f}A/s.".format(val))
+
 	def on_ps1_box(self):
 		val = self.ps1spinBox.value()
 		if self.sim == False:
@@ -494,7 +545,11 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 				print("Supply 1 set to {:3.2f}A when triggered.".format(val))
 			#print(self.instruments[0].read())
 		else:
-			print("Supply 1 set to {:3.2f}A when triggered.".format(val))
+			if self.ps1Out.isChecked():
+				print("Supply 1 ramping to {:3.2f}A.".format(val))
+				self.ps1readspinBox.setProperty("value", val)
+			else:
+				print("Supply 1 set to {:3.2f}A when triggered.".format(val))
 
 	def on_ps2_box(self):
 		val = self.ps2spinBox.value()
@@ -507,32 +562,147 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 				print("Supply 2 set to {:3.2f}A when triggered.".format(val))
 			#print(self.instruments[1].read())
 		else:
-			print("Supply 2 set to {:3.2f}A when triggered.".format(val))
+			if self.ps2Out.isChecked():
+				print("Supply 2 ramping to {:3.2f}A.".format(val))
+				self.ps2readspinBox.setProperty("value", val)
+			else:
+				print("Supply 2 set to {:3.2f}A when triggered.".format(val))
 
-	# Add ramp text box with format: scan [start_current] [end_current] [current_step]
+	# Add ramp text box with format: scan[ps#] [start_current] [end_current] [current_step]
 	# Add universal time box for time rates
+	def ramp_setting(self):
+		temp = re.compile(r'\d+(?:\.\d*)|\d+')
+		vals = np.ones(4)*np.inf
+		text = self.ramp_control.text()
+		if text != "":
+			# print(text)
+			text_list = [None] * 4
+			text_list = text.split()
+			text_list = [ele for ele in text_list if temp.match(ele)]
+			
+			counts = 0
+			for test in text_list:
+				if test != None:
+					counts += 1
+
+			if counts == 4:
+				for i,val in enumerate(text_list):
+					try:
+						vals[i] = float(val)
+					except:
+						print("Improper syntax in pos " + str(i+1) + ": " + val + " not legal\n Usage: scan[ps#] [start_current] [end_current] [current_step]")
+			else:
+				print("Improper syntax\n Usage: scan[ps#] [start_current] [end_current] [current_step]")
+			# print(vals)
+
+			if np.inf not in vals:
+				if vals[0] == 1:
+					self.vals1 = vals[1:]
+					# Check if ramp rate is valid
+					if vals[3] <= self.uni_clock.value()*self.ps1rampspinBox.value() and vals[3] != 0:
+						self.on_ramp_1()
+					else:
+						if vals[3] == 0:
+							print("Ramp rate must be > 0.")
+						else:
+							print("Ramp rate too fast. Decrease step or increase universal timer.")
+				elif vals[0] == 2:
+					self.vals2 = vals[1:]
+					# Check if ramp rate is valid
+					if vals[3] < self.uni_clock.value()*self.ps2rampspinBox.value() and vals[3] != 0:
+						self.on_ramp_2()
+					else:
+						if vals[3] == 0:
+							print("Ramp rate must be > 0.")
+						else:
+							print("Ramp rate too fast. Decrease step or increase universal timer.")
+				else:
+					print("Improper syntax: ps# must be 1 or 2\n Usage: scan[ps#] [start_current] [end_current] [current_step]")
+	
+	# timer based on universal clock
+	# add step (val[2]) everytime clock runs out until final current reached
+	# if output disabled or ps disconnected stop timer
+	def ramp1timeout(self):
+		if self.rampit1 == np.inf:
+			print("Scan complete")
+			self.ramp1timer.stop()
+		else:
+			if self.sim==False:
+				inst = self.instruments[0]
+				val = inst.query('RDGI?')
+				self.ps1readspinBox.setValue(val)
+
+			if not self.ps1Out.isChecked() or not self.con.isChecked():
+				print("Stopping scan")
+				self.ramp1timer.stop()
+			else:
+				if self.vals1[0] > self.vals1[1]:
+					dif = -abs(self.vals1[2])
+				else:
+					dif = abs(self.vals1[2])
+
+				# Check if final value can be applied
+				if abs(self.ps1spinBox.value() - self.vals1[1]) <= abs(dif):
+					self.ps1spinBox.setValue(self.vals1[1])
+					self.rampit1 = np.inf
+				# Otherwise ramp normally
+				else:
+					self.ps1spinBox.setValue(self.vals1[0]+dif*self.rampit1)
+					self.rampit1 += 1
+
+	def ramp2timeout(self):
+		if self.rampit2 == np.inf:
+			print("Scan complete")
+			self.ramp2timer.stop()
+		else:
+			if self.sim==False:
+				inst = self.instruments[1]
+				val = inst.query('RDGI?')
+				self.ps2readspinBox.setValue(val)
+			
+			if not self.ps2Out.isChecked() or not self.con.isChecked():
+				print("Stopping scan")
+				self.ramp2timer.stop()
+			else:
+				if self.vals2[0] > self.vals2[1]:
+					dif = -abs(self.vals2[2])
+				else:
+					dif = abs(self.vals2[2])
+
+				# Check if final value can be applied
+				if abs(self.ps2spinBox.value() - self.vals2[1]) <= abs(dif):
+					self.ps2spinBox.setValue(self.vals2[1])
+					self.rampit2 = np.inf
+				# Otherwise ramp normally
+				else:
+					self.ps2spinBox.setValue(self.vals2[0]+dif*self.rampit2)
+					self.rampit2 += 1
+
 	def on_ramp_1(self):
 		if self.ramp1timer.isActive():
-			self.ramptimer.stop()
-
+			self.ramp1timer.stop()
+		
+		vals = self.vals1
+		# print(vals)
+		self.ps1spinBox.setValue(vals[0])
+		self.rampit1 = 1
 		self.ramp1timer = QtCore.QTimer()
-		self.ramp1timer.setInterval(10000)
-		self.ramp1timer.timeout.connect(self.ramp1recurring_timer)
+		self.ramp1timer.setInterval(self.uni_clock.value()*1000)
+		self.ramp1timer.timeout.connect(self.ramp1timeout)
 		self.ramp1timer.start()
 
-	def ramp1recurring_timer(self):
-		pass
-		# do all the ramping logic from MIS Code
-
 	def on_ramp_2(self):
-		self.ramp2timer = QtCore.QTimer()
-		self.ramp2timer.setInterval(10000)
-		self.ramp2timer.timeout.connect(self.ramp2recurring_timer)
-		self.ramp2timer.start()
+		if self.ramp2timer.isActive():
+			self.ramp2timer.stop()
 
-	def ramp2recurring_timer(self):
-		pass
-		# do all the ramping logic from MIS Code
+		vals = self.vals2
+		# print(vals)
+		self.ps2spinBox.setValue(vals[0])
+		self.rampit2 = 1
+		self.ramp2timer = QtCore.QTimer()
+		self.ramp2timer.setInterval(self.uni_clock.value()*1000)
+		self.ramp2timer.timeout.connect(self.ramp2timeout)
+		self.ramp2timer.start()
 
 	def ps1enable(self):
 		if self.sim == False:
@@ -557,6 +727,17 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					inst.write('SETI 0.00')
 					print("Supply 1 ramping to 0.00A.")
 					inst.write('TRIG ' + str(self.ps1spinBox.value()))
+		else:
+			if self.ps1Out.isChecked(): 
+				# setting background color to light-blue 
+				self.ps1Out.setStyleSheet("background-color: lightblue; color: white; border-radius:4px;") 
+				self.ps1readspinBox.setProperty("value", self.ps1spinBox.value())
+				print("Supply 1 ramping to {:3.2f}A.".format(self.ps1spinBox.value()))
+			else:
+				# set background color back to light-grey 
+				self.ps1Out.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;") 
+				print("Supply 1 ramping to 0.00A.")
+				self.ps1readspinBox.setProperty("value", 0.00)
 
 	def ps2enable(self):
 		if self.sim == False:
@@ -581,6 +762,17 @@ class mainProgram(QtWidgets.QMainWindow, Ui_TapeDriveWindow):
 					inst.write('SETI 0.00')
 					print("Supply 2 ramping to 0.00A.")
 					inst.write('TRIG ' + str(self.ps2spinBox.value()))
+		else:
+			if self.ps2Out.isChecked(): 
+				# setting background color to light-blue 
+				self.ps2Out.setStyleSheet("background-color: lightblue; color: white; border-radius:4px;") 
+				self.ps2readspinBox.setProperty("value", self.ps2spinBox.value())
+				print("Supply 2 ramping to {:3.2f}A.".format(self.ps2spinBox.value()))
+			else:
+				# set background color back to light-grey 
+				self.ps2Out.setStyleSheet("background-color: rgba(0,0,0,0.5); color: white; border-radius:4px;") 
+				print("Supply 2 ramping to 0.00A.")
+				self.ps2readspinBox.setProperty("value", 0.00)
 
 	def recurring_timer(self):
 		if self.sim==False:
